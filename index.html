@@ -1,319 +1,443 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MCP Connection Hub Suite Cost Calculator</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.21.2/babel.min.js"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      padding: 20px;
-      background-color: #f9fafb;
-    }
-    input[type="number"] {
-      width: 100%;
-    }
-  </style>
-</head>
-<body>
-  <div id="root"></div>
-  
-  <script type="text/babel">
-    const { useState, useEffect } = React;
-    
-    const MCP_COST_CALCULATOR = () => {
-      // Platform-specific cost models (derived from data analysis)
-      const COST_MODELS = {
-        haiku: {
-          heroku: { fixedCost: 132, perUserCost: 1.94 },
-          aws: { fixedCost: 162, perUserCost: 1.86 },
-          gcr: { fixedCost: 182, perUserCost: 1.76 },
-          azure: { fixedCost: 295, perUserCost: 2.95 }
-        },
-        sonnet: {
-          heroku: { fixedCost: 490, perUserCost: 5.72 },
-          aws: { fixedCost: 518, perUserCost: 5.64 },
-          gcr: { fixedCost: 538, perUserCost: 5.55 },
-          azure: { fixedCost: 652, perUserCost: 6.74 }
-        }
-      };
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Arclio MCP Suite Cost Calculator</title>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.21.2/babel.min.js"></script>
+		<link
+			href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css"
+			rel="stylesheet"
+		/>
+		<style>
+			body {
+				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+					Helvetica, Arial, sans-serif;
+				padding: 20px;
+				background-color: #f9fafb;
+			}
+			input[type='number'] {
+				width: 100%;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="root"></div>
 
-      // State for input values
-      const [users, setUsers] = useState(100);
-      const [mcpServers, setMcpServers] = useState(3);
-      const [tokensPerMonth, setTokensPerMonth] = useState(315000); // Adjusted for 21 working days
-      const [platform, setPlatform] = useState('aws');
-      const [model, setModel] = useState('haiku');
-      const [results, setResults] = useState(null);
-      const [showAdvanced, setShowAdvanced] = useState(false);
-      const [queriesPerDay, setQueriesPerDay] = useState(10);
-      const [inputTokens, setInputTokens] = useState(500);
-      const [outputTokens, setOutputTokens] = useState(1000);
-      
-      // Constants
-      const daysPerMonth = 21; // Using working days instead of calendar days
-      const baseTokenCost = 10 / 1000000; // $10 per million tokens
-      const fixedCostMultiplier = 0.20;   // Each additional server adds 20% to fixed costs
-      const perUserCostMultiplier = 0.05;  // Each additional server adds 5% to per-user costs
+		<script type="text/babel">
+			const { useState, useEffect } = React
 
-      // Calculate costs based on input values
-      const calculateCosts = () => {
-        // Get the base cost model for the specified platform and model
-        const costModel = COST_MODELS[model][platform];
-        
-        // Calculate infrastructure costs (fixed and per-user)
-        // Each additional MCP server increases the fixed and per-user costs
-        const mcpFixedCostAddition = (mcpServers - 1) * 
-          (costModel.fixedCost * fixedCostMultiplier);
-        
-        const mcpPerUserCostMultiplier = 1 + 
-          ((mcpServers - 1) * perUserCostMultiplier);
-        
-        // Calculate token costs 
-        const tokenCost = users * tokensPerMonth * baseTokenCost;
-        
-        // Calculate infrastructure costs
-        const baseInfrastructureCost = costModel.fixedCost + mcpFixedCostAddition;
-        const perUserInfrastructureCost = users * costModel.perUserCost * mcpPerUserCostMultiplier;
-        
-        // Calculate total cost
-        const totalCost = baseInfrastructureCost + perUserInfrastructureCost + tokenCost;
-        
-        return {
-          totalCost: Math.round(totalCost),
-          breakdown: {
-            baseInfrastructureCost: Math.round(baseInfrastructureCost),
-            perUserInfrastructureCost: Math.round(perUserInfrastructureCost),
-            tokenCost: Math.round(tokenCost),
-            mcpServerCost: Math.round(mcpFixedCostAddition)
-          }
-        };
-      };
+			const MCP_COST_CALCULATOR = () => {
+				// Platform-specific cost models (derived from data analysis)
+				const COST_MODELS = {
+					haiku: {
+						heroku: { fixedCost: 132, perUserCost: 1.94 },
+						aws: { fixedCost: 162, perUserCost: 1.86 },
+						gcr: { fixedCost: 182, perUserCost: 1.76 },
+						azure: { fixedCost: 295, perUserCost: 2.95 },
+					},
+					sonnet: {
+						heroku: { fixedCost: 490, perUserCost: 5.72 },
+						aws: { fixedCost: 518, perUserCost: 5.64 },
+						gcr: { fixedCost: 538, perUserCost: 5.55 },
+						azure: { fixedCost: 652, perUserCost: 6.74 },
+					},
+				}
 
-      // Update tokens per month when advanced settings change
-      useEffect(() => {
-        if (showAdvanced) {
-          const calculatedTokens = queriesPerDay * (inputTokens + outputTokens) * daysPerMonth;
-          setTokensPerMonth(calculatedTokens);
-        }
-      }, [queriesPerDay, inputTokens, outputTokens, showAdvanced, daysPerMonth]);
+				// State for input values
+				const [users, setUsers] = useState(100)
+				const [mcpServers, setMcpServers] = useState(3)
+				const [tokensPerMonth, setTokensPerMonth] = useState(315000) // Adjusted for 21 working days
+				const [platform, setPlatform] = useState('aws')
+				const [model, setModel] = useState('haiku')
+				const [results, setResults] = useState(null)
+				const [showAdvanced, setShowAdvanced] = useState(false)
+				const [queriesPerDay, setQueriesPerDay] = useState(10)
+				const [inputTokens, setInputTokens] = useState(500)
+				const [outputTokens, setOutputTokens] = useState(1000)
 
-      // Recalculate when inputs change
-      useEffect(() => {
-        const result = calculateCosts();
-        setResults(result);
-      }, [users, mcpServers, tokensPerMonth, platform, model]);
+				// Constants
+				const daysPerMonth = 21 // Using working days instead of calendar days
+				const haikuInputCost = 0.8 / 1000000 // $0.80 per million input tokens
+				const haikuOutputCost = 4.0 / 1000000 // $4.00 per million output tokens
+				const sonnetInputCost = 3.0 / 1000000 // $3.00 per million input tokens
+				const sonnetOutputCost = 15.0 / 1000000 // $15.00 per million output tokens
+				const fixedCostMultiplier = 0.2 // Each additional server adds 20% to fixed costs
+				const perUserCostMultiplier = 0.05 // Each additional server adds 5% to per-user costs
 
-      // Format currency
-      const formatCurrency = (value) => {
-        return new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD',
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0
-        }).format(value);
-      };
+				// Calculate costs based on input values
+				const calculateCosts = () => {
+					// Get the base cost model for the specified platform and model
+					const costModel = COST_MODELS[model][platform]
 
-      // Format numbers with commas
-      const formatNumber = (value) => {
-        return new Intl.NumberFormat('en-US').format(value);
-      };
+					// Calculate infrastructure costs (fixed and per-user)
+					// Each additional MCP server increases the fixed and per-user costs
+					const mcpFixedCostAddition =
+						(mcpServers - 1) * (costModel.fixedCost * fixedCostMultiplier)
 
-      return (
-        <div className="w-full max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-          <h1 className="text-2xl font-bold mb-6 text-gray-800 text-center">MCP Context Hub Suite Cost Calculator</h1>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h2 className="text-lg font-semibold mb-4 text-gray-700">Configuration</h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Users</label>
-                  <input
-                    type="number"
-                    value={users}
-                    onChange={(e) => setUsers(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">MCP Servers</label>
-                  <input
-                    type="number"
-                    value={mcpServers}
-                    onChange={(e) => setMcpServers(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Host Platform</label>
-                  <select
-                    value={platform}
-                    onChange={(e) => setPlatform(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  >
-                    <option value="heroku">Heroku</option>
-                    <option value="aws">AWS</option>
-                    <option value="gcr">Google Cloud Run</option>
-                    <option value="azure">Azure</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Claude Model</label>
-                  <select
-                    value={model}
-                    onChange={(e) => setModel(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  >
-                    <option value="haiku">Claude 3.5 Haiku (Cost-Effective)</option>
-                    <option value="sonnet">Claude 3.7 Sonnet (High-Performance)</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <button
-                    onClick={() => setShowAdvanced(!showAdvanced)}
-                    className="text-blue-600 text-sm flex items-center"
-                  >
-                    {showAdvanced ? '- Hide' : '+ Show'} Advanced Token Settings
-                  </button>
-                </div>
-                
-                {showAdvanced ? (
-                  <div className="border-t pt-4 space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Queries Per Day (per user)</label>
-                      <input
-                        type="number"
-                        value={queriesPerDay}
-                        onChange={(e) => setQueriesPerDay(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Input Tokens Per Query</label>
-                      <input
-                        type="number"
-                        value={inputTokens}
-                        onChange={(e) => setInputTokens(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Output Tokens Per Query</label>
-                      <input
-                        type="number"
-                        value={outputTokens}
-                        onChange={(e) => setOutputTokens(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Total Tokens Per Month (per user)</label>
-                    <input
-                      type="number"
-                      value={tokensPerMonth}
-                      onChange={(e) => setTokensPerMonth(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Default: 315,000 tokens (10 queries/day × 1,500 tokens/query × 21 working days)
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h2 className="text-lg font-semibold mb-4 text-gray-700">Cost Breakdown</h2>
-              
-              {results && (
-                <div className="space-y-4">
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <h3 className="text-xl font-bold text-blue-800">
-                      Total Monthly Cost: {formatCurrency(results.totalCost)}
-                    </h3>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-700">Base Infrastructure:</span>
-                      <span className="font-medium">{formatCurrency(results.breakdown.baseInfrastructureCost)}</span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-700">User Infrastructure:</span>
-                      <span className="font-medium">{formatCurrency(results.breakdown.perUserInfrastructureCost)}</span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-700">Token Usage:</span>
-                      <span className="font-medium">{formatCurrency(results.breakdown.tokenCost)}</span>
-                    </div>
-                    
-                    {results.breakdown.mcpServerCost > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-700">Additional MCP Servers:</span>
-                        <span className="font-medium">{formatCurrency(results.breakdown.mcpServerCost)}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="border-t pt-4">
-                    <h3 className="font-semibold text-gray-700 mb-2">Usage Metrics</h3>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Monthly User Sessions:</span>
-                        <span>{formatNumber(users * queriesPerDay * daysPerMonth)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Monthly Tokens:</span>
-                        <span>{formatNumber(users * tokensPerMonth)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Cost Per User:</span>
-                        <span>{formatCurrency(results.totalCost / users)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h2 className="text-lg font-semibold mb-2 text-gray-700">Formula Used</h2>
-            <div className="bg-white p-3 rounded border text-sm text-gray-800">
-              <p className="font-medium">Monthly Cost = </p>
-              <ul className="list-disc ml-6 mt-1 space-y-1">
-                <li>Base Infrastructure Cost</li>
-                <li>(Users × Per-User Cost × MCP Server Multiplier)</li>
-                <li>(Users × Monthly Tokens per User × $0.00001)</li>
-                <li>Additional MCP Server Costs</li>
-              </ul>
-              <p className="mt-2 text-xs text-gray-600">
-                MCP Server Multiplier = 1 + 0.05 × (Number of MCP Servers - 1)<br />
-                Additional MCP Server Costs = (Number of MCP Servers - 1) × (Base Cost × 0.20)
-              </p>
-            </div>
-          </div>
-        </div>
-      );
-    };
+					const mcpPerUserCostMultiplier =
+						1 + (mcpServers - 1) * perUserCostMultiplier
 
-    ReactDOM.render(<MCP_COST_CALCULATOR />, document.getElementById('root'));
-  </script>
-</body>
+					// Calculate token costs
+					let inputTokensPerMonth, outputTokensPerMonth
+					if (showAdvanced) {
+						inputTokensPerMonth = queriesPerDay * inputTokens * daysPerMonth
+						outputTokensPerMonth = queriesPerDay * outputTokens * daysPerMonth
+					} else {
+						// If not using advanced settings, assume 1:2 ratio of input:output tokens
+						inputTokensPerMonth = tokensPerMonth * 0.333
+						outputTokensPerMonth = tokensPerMonth * 0.667
+					}
+
+					const inputCost = model === 'haiku' ? haikuInputCost : sonnetInputCost
+					const outputCost =
+						model === 'haiku' ? haikuOutputCost : sonnetOutputCost
+					const tokenCost =
+						users *
+						(inputTokensPerMonth * inputCost +
+							outputTokensPerMonth * outputCost)
+
+					// Calculate infrastructure costs
+					const baseInfrastructureCost =
+						costModel.fixedCost + mcpFixedCostAddition
+					const perUserInfrastructureCost =
+						users * costModel.perUserCost * mcpPerUserCostMultiplier
+
+					// Calculate total cost
+					const totalCost =
+						baseInfrastructureCost + perUserInfrastructureCost + tokenCost
+
+					return {
+						totalCost: Math.round(totalCost),
+						breakdown: {
+							baseInfrastructureCost: Math.round(baseInfrastructureCost),
+							perUserInfrastructureCost: Math.round(perUserInfrastructureCost),
+							tokenCost: Math.round(tokenCost),
+							mcpServerCost: Math.round(mcpFixedCostAddition),
+						},
+					}
+				}
+
+				// Update tokens per month when advanced settings change
+				useEffect(() => {
+					if (showAdvanced) {
+						const calculatedTokens =
+							queriesPerDay * (inputTokens + outputTokens) * daysPerMonth
+						setTokensPerMonth(calculatedTokens)
+					}
+				}, [
+					queriesPerDay,
+					inputTokens,
+					outputTokens,
+					showAdvanced,
+					daysPerMonth,
+				])
+
+				// Recalculate when inputs change
+				useEffect(() => {
+					const result = calculateCosts()
+					setResults(result)
+				}, [users, mcpServers, tokensPerMonth, platform, model])
+
+				// Format currency
+				const formatCurrency = value => {
+					return new Intl.NumberFormat('en-US', {
+						style: 'currency',
+						currency: 'USD',
+						minimumFractionDigits: 0,
+						maximumFractionDigits: 0,
+					}).format(value)
+				}
+
+				// Format numbers with commas
+				const formatNumber = value => {
+					return new Intl.NumberFormat('en-US').format(value)
+				}
+
+				return (
+					<div className="w-full max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+						<h1 className="text-2xl font-bold mb-6 text-gray-800 text-center">
+							Arclio MCP Suite Cost Calculator
+						</h1>
+
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+							<div className="bg-gray-50 p-4 rounded-lg">
+								<h2 className="text-lg font-semibold mb-4 text-gray-700">
+									Configuration
+								</h2>
+
+								<div className="space-y-4">
+									<div>
+										<label className="block text-sm font-medium text-gray-700 mb-1">
+											Users
+										</label>
+										<input
+											type="number"
+											value={users}
+											onChange={e =>
+												setUsers(Math.max(1, parseInt(e.target.value) || 1))
+											}
+											className="w-full px-3 py-2 border border-gray-300 rounded-md"
+										/>
+									</div>
+
+									<div>
+										<label className="block text-sm font-medium text-gray-700 mb-1">
+											MCP Servers
+										</label>
+										<input
+											type="number"
+											value={mcpServers}
+											onChange={e =>
+												setMcpServers(
+													Math.max(1, parseInt(e.target.value) || 1),
+												)
+											}
+											className="w-full px-3 py-2 border border-gray-300 rounded-md"
+										/>
+									</div>
+
+									<div>
+										<label className="block text-sm font-medium text-gray-700 mb-1">
+											Host Platform
+										</label>
+										<select
+											value={platform}
+											onChange={e => setPlatform(e.target.value)}
+											className="w-full px-3 py-2 border border-gray-300 rounded-md"
+										>
+											<option value="heroku">Heroku</option>
+											<option value="aws">AWS</option>
+											<option value="gcr">Google Cloud Run</option>
+											<option value="azure">Azure</option>
+										</select>
+									</div>
+
+									<div>
+										<label className="block text-sm font-medium text-gray-700 mb-1">
+											Claude Model
+										</label>
+										<select
+											value={model}
+											onChange={e => setModel(e.target.value)}
+											className="w-full px-3 py-2 border border-gray-300 rounded-md"
+										>
+											<option value="haiku">
+												Claude 3.5 Haiku (Cost-Effective)
+											</option>
+											<option value="sonnet">
+												Claude 3.7 Sonnet (High-Performance)
+											</option>
+										</select>
+									</div>
+
+									<div>
+										<button
+											onClick={() => setShowAdvanced(!showAdvanced)}
+											className="text-blue-600 text-sm flex items-center"
+										>
+											{showAdvanced ? '- Hide' : '+ Show'} Advanced Token
+											Settings
+										</button>
+									</div>
+
+									{showAdvanced ? (
+										<div className="border-t pt-4 space-y-4">
+											<div>
+												<label className="block text-sm font-medium text-gray-700 mb-1">
+													Queries Per Day (per user)
+												</label>
+												<input
+													type="number"
+													value={queriesPerDay}
+													onChange={e =>
+														setQueriesPerDay(
+															Math.max(1, parseInt(e.target.value) || 1),
+														)
+													}
+													className="w-full px-3 py-2 border border-gray-300 rounded-md"
+												/>
+											</div>
+
+											<div>
+												<label className="block text-sm font-medium text-gray-700 mb-1">
+													Input Tokens Per Query
+												</label>
+												<input
+													type="number"
+													value={inputTokens}
+													onChange={e =>
+														setInputTokens(
+															Math.max(1, parseInt(e.target.value) || 1),
+														)
+													}
+													className="w-full px-3 py-2 border border-gray-300 rounded-md"
+												/>
+											</div>
+
+											<div>
+												<label className="block text-sm font-medium text-gray-700 mb-1">
+													Output Tokens Per Query
+												</label>
+												<input
+													type="number"
+													value={outputTokens}
+													onChange={e =>
+														setOutputTokens(
+															Math.max(1, parseInt(e.target.value) || 1),
+														)
+													}
+													className="w-full px-3 py-2 border border-gray-300 rounded-md"
+												/>
+											</div>
+										</div>
+									) : (
+										<div>
+											<label className="block text-sm font-medium text-gray-700 mb-1">
+												Total Tokens Per Month (per user)
+											</label>
+											<input
+												type="number"
+												value={tokensPerMonth}
+												onChange={e =>
+													setTokensPerMonth(
+														Math.max(1, parseInt(e.target.value) || 1),
+													)
+												}
+												className="w-full px-3 py-2 border border-gray-300 rounded-md"
+											/>
+											<p className="text-xs text-gray-500 mt-1">
+												Default: 315,000 tokens (10 queries/day × 1,500
+												tokens/query × 21 working days)
+											</p>
+										</div>
+									)}
+								</div>
+							</div>
+
+							<div className="bg-gray-50 p-4 rounded-lg">
+								<h2 className="text-lg font-semibold mb-4 text-gray-700">
+									Cost Breakdown
+								</h2>
+
+								{results && (
+									<div className="space-y-4">
+										<div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+											<h3 className="text-xl font-bold text-blue-800">
+												Total Monthly Cost: {formatCurrency(results.totalCost)}
+											</h3>
+										</div>
+
+										<div className="space-y-2">
+											<div className="flex justify-between">
+												<span className="text-gray-700">
+													Base Infrastructure:
+												</span>
+												<span className="font-medium">
+													{formatCurrency(
+														results.breakdown.baseInfrastructureCost,
+													)}
+												</span>
+											</div>
+
+											<div className="flex justify-between">
+												<span className="text-gray-700">
+													User Infrastructure:
+												</span>
+												<span className="font-medium">
+													{formatCurrency(
+														results.breakdown.perUserInfrastructureCost,
+													)}
+												</span>
+											</div>
+
+											<div className="flex justify-between">
+												<span className="text-gray-700">Token Usage:</span>
+												<span className="font-medium">
+													{formatCurrency(results.breakdown.tokenCost)}
+												</span>
+											</div>
+
+											{results.breakdown.mcpServerCost > 0 && (
+												<div className="flex justify-between">
+													<span className="text-gray-700">
+														Additional MCP Servers:
+													</span>
+													<span className="font-medium">
+														{formatCurrency(results.breakdown.mcpServerCost)}
+													</span>
+												</div>
+											)}
+										</div>
+
+										<div className="border-t pt-4">
+											<h3 className="font-semibold text-gray-700 mb-2">
+												Usage Metrics
+											</h3>
+											<div className="space-y-2 text-sm">
+												<div className="flex justify-between">
+													<span className="text-gray-600">
+														Monthly User Sessions:
+													</span>
+													<span>
+														{formatNumber(users * queriesPerDay * daysPerMonth)}
+													</span>
+												</div>
+												<div className="flex justify-between">
+													<span className="text-gray-600">Monthly Tokens:</span>
+													<span>{formatNumber(users * tokensPerMonth)}</span>
+												</div>
+												<div className="flex justify-between">
+													<span className="text-gray-600">Cost Per User:</span>
+													<span>
+														{formatCurrency(results.totalCost / users)}
+													</span>
+												</div>
+											</div>
+										</div>
+									</div>
+								)}
+							</div>
+						</div>
+
+						<div className="bg-gray-50 p-4 rounded-lg">
+							<h2 className="text-lg font-semibold mb-2 text-gray-700">
+								Formula Used
+							</h2>
+							<div className="bg-white p-3 rounded border text-sm text-gray-800">
+								<p className="font-medium">Monthly Cost = </p>
+								<ul className="list-disc ml-6 mt-1 space-y-1">
+									<li>Base Infrastructure Cost</li>
+									<li>(Users × Per-User Cost × MCP Server Multiplier)</li>
+									<li>
+										Token Costs:
+										<ul className="ml-6 mt-1">
+											<li>Users × (Input Tokens × Input Token Cost)</li>
+											<li>+ Users × (Output Tokens × Output Token Cost)</li>
+										</ul>
+									</li>
+									<li>Additional MCP Server Costs</li>
+								</ul>
+								<p className="mt-2 text-xs text-gray-600">
+									MCP Server Multiplier = 1 + 0.05 × (Number of MCP Servers - 1)
+									<br />
+									Additional MCP Server Costs = (Number of MCP Servers - 1) ×
+									(Base Cost × 0.20)
+									<br />
+									Claude 3.5 Haiku: $0.80/M input tokens, $4.00/M output tokens
+									<br />
+									Claude 3.7 Sonnet: $3.00/M input tokens, $15.00/M output
+									tokens
+								</p>
+							</div>
+						</div>
+					</div>
+				)
+			}
+
+			ReactDOM.render(<MCP_COST_CALCULATOR />, document.getElementById('root'))
+		</script>
+	</body>
 </html>
