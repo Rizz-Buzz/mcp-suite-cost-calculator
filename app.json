@@ -1,0 +1,15 @@
+{
+    "name": "MCP Suite Cost Calculator",
+    "description": "A simple web-based calculator for estimating MCP Suite costs",
+    "repository": "https://github.com/yourusername/mcp-suite-cost-calculator",
+    "keywords": [
+        "node",
+        "express",
+        "static"
+    ],
+    "buildpacks": [
+        {
+            "url": "heroku/nodejs"
+        }
+    ]
+}
