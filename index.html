@@ -72,10 +72,20 @@
 					// Get the base cost model for the specified platform and model
 					const costModel = COST_MODELS[model][platform]
 
+					// Scale down base costs for small deployments
+					let scaledFixedCost = costModel.fixedCost
+					if (users <= 5) {
+						// For very small deployments (1-5 users), use minimal infrastructure
+						scaledFixedCost = costModel.fixedCost * 0.3 // 30% of standard cost
+					} else if (users <= 20) {
+						// For small deployments (6-20 users), use reduced infrastructure
+						scaledFixedCost = costModel.fixedCost * 0.6 // 60% of standard cost
+					}
+
 					// Calculate infrastructure costs (fixed and per-user)
 					// Each additional MCP server increases the fixed and per-user costs
 					const mcpFixedCostAddition =
-						(mcpServers - 1) * (costModel.fixedCost * fixedCostMultiplier)
+						(mcpServers - 1) * (scaledFixedCost * fixedCostMultiplier)
 
 					const mcpPerUserCostMultiplier =
 						1 + (mcpServers - 1) * perUserCostMultiplier
@@ -100,8 +110,7 @@
 							outputTokensPerMonth * outputCost)
 
 					// Calculate infrastructure costs
-					const baseInfrastructureCost =
-						costModel.fixedCost + mcpFixedCostAddition
+					const baseInfrastructureCost = scaledFixedCost + mcpFixedCostAddition
 					const perUserInfrastructureCost =
 						users * costModel.perUserCost * mcpPerUserCostMultiplier
 
