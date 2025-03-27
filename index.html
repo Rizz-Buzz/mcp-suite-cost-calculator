@@ -168,7 +168,7 @@
 					}).format(value)
 				}
 
-				// Format numbers with commas 
+				// Format numbers with commas
 				const formatNumber = value => {
 					return new Intl.NumberFormat('en-US').format(value)
 				}
@@ -465,8 +465,7 @@
 								<p className="mt-2 text-xs text-gray-600">
 									MCP Server Multiplier = 1 + 0.05 × (Number of MCP Servers - 1)
 									<br />
-									Additional MCP Server Costs = (Number of MCP Servers - 1) ×
-									(Base Cost × 0.20)
+									Additional MCP Server Costs = Number of MCP Servers × $5
 									<br />
 									Claude 3.5 Haiku: $0.80/M input tokens, $4.00/M output tokens
 									<br />
