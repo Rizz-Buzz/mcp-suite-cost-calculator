@@ -64,7 +64,7 @@
 				const haikuOutputCost = 4.0 / 1000000 // $4.00 per million output tokens
 				const sonnetInputCost = 3.0 / 1000000 // $3.00 per million input tokens
 				const sonnetOutputCost = 15.0 / 1000000 // $15.00 per million output tokens
-				const fixedCostMultiplier = 0.2 // Each additional server adds 20% to fixed costs
+				const mcpServerBaseCost = 5 // Each MCP server has a small fixed cost (~$5)
 				const perUserCostMultiplier = 0.05 // Each additional server adds 5% to per-user costs
 
 				// Calculate costs based on input values
@@ -82,13 +82,23 @@
 						scaledFixedCost = costModel.fixedCost * 0.6 // 60% of standard cost
 					}
 
-					// Calculate infrastructure costs (fixed and per-user)
-					// Each additional MCP server increases the fixed and per-user costs
-					const mcpFixedCostAddition =
-						(mcpServers - 1) * (scaledFixedCost * fixedCostMultiplier)
+					// Calculate MCP server costs - fixed cost per server
+					// This more accurately reflects npx/stdio server deployment
+					const mcpServerCost = mcpServers * mcpServerBaseCost
+
+					// Server sharing factor - as users increase, servers become more shared
+					// This reflects that not every user needs a dedicated set of servers
+					let serverSharingFactor = 1.0 // Default: no sharing
+					if (users > 50) {
+						serverSharingFactor = 0.6 // High sharing
+					} else if (users > 20) {
+						serverSharingFactor = 0.8 // Medium sharing
+					} else if (users > 5) {
+						serverSharingFactor = 0.9 // Low sharing
+					}
 
 					const mcpPerUserCostMultiplier =
-						1 + (mcpServers - 1) * perUserCostMultiplier
+						1 + (mcpServers - 1) * perUserCostMultiplier * serverSharingFactor
 
 					// Calculate token costs
 					let inputTokensPerMonth, outputTokensPerMonth
@@ -110,13 +120,16 @@
 							outputTokensPerMonth * outputCost)
 
 					// Calculate infrastructure costs
-					const baseInfrastructureCost = scaledFixedCost + mcpFixedCostAddition
+					const baseInfrastructureCost = scaledFixedCost
 					const perUserInfrastructureCost =
 						users * costModel.perUserCost * mcpPerUserCostMultiplier
 
 					// Calculate total cost
 					const totalCost =
-						baseInfrastructureCost + perUserInfrastructureCost + tokenCost
+						baseInfrastructureCost +
+						perUserInfrastructureCost +
+						mcpServerCost +
+						tokenCost
 
 					return {
 						totalCost: Math.round(totalCost),
@@ -124,7 +137,7 @@
 							baseInfrastructureCost: Math.round(baseInfrastructureCost),
 							perUserInfrastructureCost: Math.round(perUserInfrastructureCost),
 							tokenCost: Math.round(tokenCost),
-							mcpServerCost: Math.round(mcpFixedCostAddition),
+							mcpServerCost: Math.round(mcpServerCost),
 						},
 					}
 				}
