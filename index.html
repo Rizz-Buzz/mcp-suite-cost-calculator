@@ -86,19 +86,10 @@
 					// This more accurately reflects npx/stdio server deployment
 					const mcpServerCost = mcpServers * mcpServerBaseCost
 
-					// Server sharing factor - as users increase, servers become more shared
-					// This reflects that not every user needs a dedicated set of servers
-					let serverSharingFactor = 1.0 // Default: no sharing
-					if (users > 50) {
-						serverSharingFactor = 0.6 // High sharing
-					} else if (users > 20) {
-						serverSharingFactor = 0.8 // Medium sharing
-					} else if (users > 5) {
-						serverSharingFactor = 0.9 // Low sharing
-					}
-
+					// Remove server sharing factor since each server has its own filesystem
+					// and specialized functionality that can't be shared across users
 					const mcpPerUserCostMultiplier =
-						1 + (mcpServers - 1) * perUserCostMultiplier * serverSharingFactor
+						1 + (mcpServers - 1) * perUserCostMultiplier
 
 					// Calculate token costs
 					let inputTokensPerMonth, outputTokensPerMonth
@@ -202,9 +193,21 @@
 										<input
 											type="number"
 											value={users}
-											onChange={e =>
-												setUsers(Math.max(1, parseInt(e.target.value) || 1))
-											}
+											onChange={e => {
+												const val = e.target.value
+												// Allow empty field for typing, but use 1 when calculating
+												if (val === '') {
+													setUsers('')
+												} else {
+													setUsers(Math.max(1, parseInt(val) || 1))
+												}
+											}}
+											onBlur={e => {
+												// When field loses focus, ensure value is at least 1
+												if (users === '' || users < 1) {
+													setUsers(1)
+												}
+											}}
 											className="w-full px-3 py-2 border border-gray-300 rounded-md"
 										/>
 									</div>
@@ -216,11 +219,21 @@
 										<input
 											type="number"
 											value={mcpServers}
-											onChange={e =>
-												setMcpServers(
-													Math.max(1, parseInt(e.target.value) || 1),
-												)
-											}
+											onChange={e => {
+												const val = e.target.value
+												// Allow empty field for typing, but use 1 when calculating
+												if (val === '') {
+													setMcpServers('')
+												} else {
+													setMcpServers(Math.max(1, parseInt(val) || 1))
+												}
+											}}
+											onBlur={e => {
+												// When field loses focus, ensure value is at least 1
+												if (mcpServers === '' || mcpServers < 1) {
+													setMcpServers(1)
+												}
+											}}
 											className="w-full px-3 py-2 border border-gray-300 rounded-md"
 										/>
 									</div>
