@@ -143,6 +143,10 @@
 
 				// Format currency
 				const formatCurrency = value => {
+					// For values between 0 and 1, show "< $1" instead of "$0"
+					if (value > 0 && value < 1) {
+						return '< $1'
+					}
 					return new Intl.NumberFormat('en-US', {
 						style: 'currency',
 						currency: 'USD',
@@ -356,7 +360,10 @@
 											<div className="flex justify-between">
 												<span className="text-gray-700">Token Usage:</span>
 												<span className="font-medium">
-													{formatCurrency(results.breakdown.tokenCost)}
+													{results.breakdown.tokenCost === 0 &&
+													tokensPerMonth > 0
+														? '< $1'
+														: formatCurrency(results.breakdown.tokenCost)}
 												</span>
 											</div>
 
